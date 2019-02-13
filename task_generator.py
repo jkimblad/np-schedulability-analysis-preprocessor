@@ -9,6 +9,7 @@ import random
 import csv
 # numpy is used to create custom discrete distributions
 import numpy as np
+import argparse
 
 #Constants
 EXPECTED_ARGUMENTS = 3
@@ -19,41 +20,131 @@ UTILIZATION_ARGUMENT = 2
 # Main, execution starts here
 def main():
 
-    # Check input arguments
-    if(len(sys.argv) != EXPECTED_ARGUMENTS):
-        print("Expected exactly " + str(EXPECTED_ARGUMENTS - 1) + " arguments, " + str(len(sys.argv) - 1) + " was provided")
-        sys.exit()
+    # Parse user arguments/options
+    inputArguments = inputParse()
 
     #Save input arguments
-    taskAmountArg = int(sys.argv[TASK_AMOUNT_ARGUMENT])
-    utilizationArg = float(sys.argv[UTILIZATION_ARGUMENT])
+    taskAmountArg = int(inputArguments.taskAmount)
+    utilizationArg = float(inputArguments.utilization)
+    
 
     #Randomise utilizations
     utilizations = uUniFast(taskAmountArg, utilizationArg)
-    # print (utilizations)
 
     #Randomize periods, assume periods are equal to deadlines
     periods = generatePeriods(taskAmountArg)
-    # print(periods)
 
-    #Calculate computation times
-    computationTimes = calculateComputationTimes(periods, utilizations)
-    # print (computationTimes['bcet'])
-    # print (computationTimes['wcet'])
+    
+    # Generate a regular task set
+    if(inputArguments.arFactors is None):
+        #Calculate computation times
+        computationTimes = calculateComputationTimes(periods, utilizations)
+    # Generate tasks with A, E and R phases
+    else:
+        computationTimes = calculateAerComputationTimes(periods, utilizations, inputArguments.arFactors)
 
     #Randomize release times
     releaseTimes = generateReleaseTimes(taskAmountArg)
 
     #Randomize priorities
     priorities = generatePriorities(taskAmountArg)
-    # print(priorities)
 
-    printTasks(utilizations, periods, computationTimes, releaseTimes, priorities)
+    # Print generate tasks to output
+    printTasks(utilizations, periods, computationTimes, releaseTimes, priorities, inputArguments)
+
     
-def printTasks(utilizations, periods, computationTimes, releaseTimes, priorities):
+def calculateAerComputationTimes(periods, utilizations, arFactors):
+    bcetList = []
+    wcetList = []
+    aetList = []
+    retList = []
 
-    fieldNames = ["id", "arrival_min", "arrival_max", "computation_min", "computation_max", "deadline", "priority", "period"]
-    writer = csv.writer(sys.stdout, fieldNames)
+    # Used to translate a period into an index for the bcet and wcet lists
+    periodsEnum = {'100' : 0, '200' : 1, '500' : 2, '1000' : 3, '2000' : 4, '5000' : 5, '10000' : 6, '20000' : 7, '100000' : 8}
+
+    # The following bcet and wcet factors are given by the free real benchmarks for the automotive industry
+    # Best-case execution time as intervals of factors of the average case
+    bcetFactors = [[0.19, 0.92], [0.12, 0.89], [0.17,  0.94], [0.05, 0.99], [0.11, 0.98], [0.32, 0.95], [0.09, 0.99], [0.45,0.98], [0.68, 0.80]]
+    # Worst-case execution time as intervals of factors of the average case
+    wcetFactors = [[1.30, 29.11], [1.54, 19.04], [1.13, 18.44], [1.06, 30.03], [1.06, 15.61], [1.13, 7.76], [1.02, 8.88], [1.03, 4.90], [1.84, 4.75]]
+
+    # Iterate through each period
+    for i in range(0, len(periods)):
+        # TODO Randomize bcet from interval using some probability distribution
+        # The distribution for bcet should however be flipped (more higher
+        # values that are closer to the acet)
+
+        bcetMin = bcetFactors[periodsEnum[str(periods[i])]][0] 
+        bcetMax = bcetFactors[periodsEnum[str(periods[i])]][1] 
+
+        # For now, use the optimal BCET within the given interval
+        bcetFactor = bcetMax
+        bcet = int(periods[i] * utilizations[i] * bcetFactor)
+
+        # We do the same for wcet
+        # We calculate A and R times from the bcet
+        wcetMin = wcetFactors[periodsEnum[str(periods[i])]][0] 
+        wcetMax = wcetFactors[periodsEnum[str(periods[i])]][1] 
+
+        # For now, use the optimal WCET within the given interval
+        wcetFactor = wcetMin
+        wcet = int(periods[i] * utilizations[i] * wcetFactor)
+
+        # Calculate A and E from BCET to not overshoot the total execution time
+        # (if a + e is close to 1 and calculated from the WCET their sum might
+        # be larger than the BCET resulting in a negative BCET in later
+        # calculations) 
+        
+        #Calculate Aqcuisition Execution Time
+        aet = int(bcet * float(arFactors[0]))
+        # Calculate Restitution Execution Time
+        ret = int(bcet * float(arFactors[1]))
+
+        # Remove A and R times from the execution time to maintain the same utilization
+        wcet = wcet - (aet + ret)
+        bcet = bcet - (aet + ret)
+
+        # Append to all lists
+        wcetList.append(wcet)
+        bcetList.append(bcet)
+        aetList.append(aet)
+        retList.append(ret)
+
+    # Return results as a dictionary containing the four lists
+    computationTimes = { 'bcet' : bcetList, 'wcet' : wcetList, 'aet' : aetList, 'ret' : retList }
+    return computationTimes
+
+def inputParse():
+    parser = argparse.ArgumentParser()
+
+    # Output file
+    parser.add_argument("-o", "--output", dest="outputFile", help="Output FILE", metavar="FILE")
+
+    # Amount of tasks
+    parser.add_argument("taskAmount", help="Amount of tasks to be generated within the task set", metavar="tasks")
+
+    # Desired task set utilization
+    parser.add_argument("utilization", help="The desired total utilization of the task set", metavar="util")
+
+    # Create A and R jobs
+    parser.add_argument("--aer", nargs=2, dest="arFactors", help="Input is transformed to A and R jobs to be scheduled onto memory. First argument is the utilization factor of the acquisition phase and the second is the utilization factor of the restitution phase as part of the whole execution time of the task (a+e+r).", metavar="util")
+
+    return parser.parse_args()
+
+
+def printTasks(utilizations, periods, computationTimes, releaseTimes, priorities, inputArguments):
+
+    # No A and R phases
+    if not (inputArguments.arFactors):
+        fieldNames = ["id", "arrival_min", "arrival_max", "computation_min", "computation_max", "deadline", "priority", "period"]
+
+    # A and R phases
+    else:
+        fieldNames = ["id", "arrival_min", "arrival_max", "computation_min", "computation_max", "acquisition", "restitution", "deadline", "priority", "period"]
+
+    # Open output file is given, else print to stdout
+    outputFile = open(inputArguments.outputFile, 'w+') if inputArguments.outputFile else sys.stdout
+    writer = csv.writer(outputFile, fieldNames)
     writer.writerow(fieldNames)
 
     for i in range(len(utilizations)):
@@ -72,6 +163,14 @@ def printTasks(utilizations, periods, computationTimes, releaseTimes, priorities
         #max
         task.append(computationTimes['wcet'][i])
 
+        # Check if we add A and R phases to output
+        if(inputArguments.arFactors):
+            # Acquisition
+            task.append(computationTimes['aet'][i])
+
+            # Restitution
+            task.append(computationTimes['ret'][i])
+
         #deadline
         #deadline equals period
         task.append(periods[i])
@@ -86,6 +185,8 @@ def printTasks(utilizations, periods, computationTimes, releaseTimes, priorities
         writer.writerow(task)
 
 
+# Not adapted currently. The current way should allow for the user to implement
+# this through custom input, thus it should not be needed
 def generateAcquisitionTimes(taskAmount):
     # Acquisition times is represented as nS
     # These times are acquired from real world examples presented in
@@ -104,6 +205,8 @@ def generateAcquisitionTimes(taskAmount):
     return acquisitionTimes
 
 
+# Not adapted currently. The current way should allow for the user to implement
+# this through custom input, thus it should not be needed
 def generateRestitutionTumes(taskAmount):
     # Restitution times is represented as nS
     # These times are acquired from real world examples presented in
@@ -131,8 +234,10 @@ def generateReleaseTimes(taskAmount):
     # Worst Case Release-Time
     wcrt = []
     for i in range (taskAmount):
-        bcrt.append(random.randint(0, 1))
-        wcrt.append(random.randint(1, 2))
+        # bcrt.append(random.randint(0, 1))
+        # wcrt.append(random.randint(1, 2))
+        bcrt.append(0)
+        wcrt.append(0)
 
     releaseTimes = {'bcrt' : bcrt, 'wcrt' : wcrt}
     return releaseTimes
@@ -159,7 +264,6 @@ def calculateComputationTimes(periods, utilizations):
 
         bcetMin = bcetFactors[periodsEnum[str(periods[i])]][0] 
         bcetMax = bcetFactors[periodsEnum[str(periods[i])]][1] 
-        bcetRange = bcetMax - bcetMin
 
         # For now, use the optimal BCET within the given interval
         bcetFactor = bcetMax
@@ -168,8 +272,8 @@ def calculateComputationTimes(periods, utilizations):
         # We do the same for wcet
         wcetMin = wcetFactors[periodsEnum[str(periods[i])]][0] 
         wcetMax = wcetFactors[periodsEnum[str(periods[i])]][1] 
-        wcetRange = wcetMax - wcetMin
 
+        # For now, use the optimal WCET within the given interval
         wcetFactor = wcetMin
         wcet.append(int(periods[i] * utilizations[i] * wcetFactor))
 
