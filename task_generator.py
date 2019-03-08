@@ -16,6 +16,8 @@ EXPECTED_ARGUMENTS = 3
 TASK_AMOUNT_ARGUMENT = 1
 UTILIZATION_ARGUMENT = 2
 
+#Input arguments
+want_aer = False;
 
 # Main, execution starts here
 def main():
@@ -26,17 +28,18 @@ def main():
     #Save input arguments
     taskAmountArg = int(inputArguments.taskAmount)
     utilizationArg = float(inputArguments.utilization)
-    
+    #Save if we should generate AER task set
+    if not(inputArguments.arFactors is None):
+        want_aer = True
 
     #Randomise utilizations
     utilizations = uUniFast(taskAmountArg, utilizationArg)
 
     #Randomize periods, assume periods are equal to deadlines
     periods = generatePeriods(taskAmountArg)
-
     
     # Generate a regular task set
-    if(inputArguments.arFactors is None):
+    if not(want_aer):
         #Calculate computation times
         computationTimes = calculateComputationTimes(periods, utilizations)
     # Generate tasks with A, E and R phases
@@ -70,9 +73,6 @@ def calculateAerComputationTimes(periods, utilizations, arFactors):
 
     # Iterate through each period
     for i in range(0, len(periods)):
-        # TODO Randomize bcet from interval using some probability distribution
-        # The distribution for bcet should however be flipped (more higher
-        # values that are closer to the acet)
 
         bcetMin = bcetFactors[periodsEnum[str(periods[i])]][0] 
         bcetMax = bcetFactors[periodsEnum[str(periods[i])]][1] 
@@ -88,6 +88,9 @@ def calculateAerComputationTimes(periods, utilizations, arFactors):
 
         # For now, use the optimal WCET within the given interval
         wcetFactor = wcetMin
+        wcet = int(periods[i] * utilizations[i] * wcetFactor)
+
+        # For now, same wcet and bcet, as wcet is only interesting part for us
         wcet = int(periods[i] * utilizations[i] * wcetFactor)
 
         # Calculate A and E from BCET to not overshoot the total execution time
@@ -127,7 +130,7 @@ def inputParse():
     parser.add_argument("utilization", help="The desired total utilization of the task set", metavar="util")
 
     # Create A and R jobs
-    parser.add_argument("--aer", nargs=2, dest="arFactors", help="Input is transformed to A and R jobs to be scheduled onto memory. First argument is the utilization factor of the acquisition phase and the second is the utilization factor of the restitution phase as part of the whole execution time of the task (a+e+r).", metavar="util")
+    parser.add_argument("-a", "--aer", nargs=2, dest="arFactors", help="Input is transformed to A and R jobs to be scheduled onto memory. First argument is the utilization factor of the acquisition phase and the second is the utilization factor of the restitution phase as part of the whole execution time of the task (a+e+r).", metavar="UTIL")
 
     return parser.parse_args()
 
