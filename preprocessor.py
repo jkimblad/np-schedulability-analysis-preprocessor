@@ -7,6 +7,8 @@ import csv
 from gmpy2 import lcm
 import sys
 import argparse
+# For ceiling function
+from math import ceil
 
 # Constants defining input
 EXPECTED_COLUMNS = 8
@@ -23,6 +25,8 @@ def main():
     # Get user options
     inputArguments = inputParse()
 
+    windowSize = inputArguments.windowSize
+
     # Load tasks from input into taskSet
     getTasks(inputArguments.inputFile)
 
@@ -30,7 +34,12 @@ def main():
     hyperPeriod = taskSet.getHyperPeriod()
 
     # Generate A and R jobs
-    generateJobs()
+    generateJobs(windowSize)
+
+    # Priorities must be assigned after all jobs have been created
+    assignJobPriorities()
+
+    jobSet.printJobs()
 
     
 def inputParse():
@@ -47,8 +56,30 @@ def inputParse():
 
     return parser.parse_args()
 
+
+def assignJobPriorities():
+    taskSet = Task_Set()
+    jobSet = Job_Set()
+
+    maxRPrio = 0
+
+    #Assign R-priorities according to EDF
+    for job in jobSet.jobs:
+        if job.isRestitution():
+            job.priority = job.deadline
+            maxRPrio = max(maxRPrio, job.priority)
+
+    # No A-phase should have same prio as an R-phase, so add 1 incase a task has a prio of 0
+    maxRPrio += 1
+
+    #Assign A-priorities according to their task priority
+    for job in jobSet.jobs:
+        if job.isAcquisition():
+            job.priority = maxRPrio + taskSet.getTask(job.task_id).priority
+
+
 # Return the A and R jobs that a single task would produce within a given hyperperiod as a list of lists
-def generateJobs():
+def generateJobs(windowRatio):
 
     taskSet = Task_Set()
     jobSet = Job_Set()
@@ -57,14 +88,15 @@ def generateJobs():
 
     # Iterate through all tasks
     for task in taskSet.tasks:
-        print(task.task_id)
-
 
         # Amount of jobs to be produced
         jobAmount = int(hyperPeriod / task.period)
 
         for i in range(jobAmount):
             currentTime = i * task.period
+
+            jobInterval = task.deadline - task.arrival_min  
+            windowSize = jobInterval - task.computation_max
 
             # Create the job ID pair as there are some constraints on how they should be created
             idPair = jobSet.getNextIDPair()
@@ -75,40 +107,30 @@ def generateJobs():
             aJob.task_id = task.task_id
             aJob.job_id = idPair[0] 
             #Arrival for A is same as arrival for task
-            aJob.arrival_min = task.arrival_min
-            aJob.arrival_max = task.arrival_max
+            aJob.arrival_min = currentTime + task.arrival_min
+            aJob.arrival_max = currentTime + task.arrival_max
             aJob.cost_min = task.acquisition
             aJob.cost_max = task.acquisition
 
             # The deadline of the A job is given by the window ratio given as input
-            # TODO
-            aJob.deadline = None
-
-
-            # The priority is given by the tasks priority, but it must have a
-            # higher value than all other R-jobs
-            #   - Maybe we assign priorities after all jobs have been created allready?
+            absoluteADeadline = ceil(windowRatio * windowSize)
+            aJob.deadline = currentTime + absoluteADeadline
 
 
             # Create the R job
             rJob = Job()
             rJob.task_id = task.task_id
             rJob.job_id = idPair[1] 
-            #Arrival for A is same as arrival for task
-            # TODO
-            rJob.arrival_min = None
-            rJob.arrival_max = None
+            #Arrival for R is A-window + WCET 
+            #Assume deterministic arrival
+            #If the split between A and R window isnt an integer the extra cycle is given to the R window.
+            rJob.arrival_min = aJob.deadline + task.computation_max
+            rJob.arrival_max = rJob.arrival_min
             rJob.cost_min = task.restitution
             rJob.cost_max = task.restitution
 
             # The deadline of the A job is given by the window ratio given as input
-            # TODO
-            rJob.deadline = None
-
-            # The priority is given by the tasks priority, but it must have a
-            # higher value than all other R-jobs
-            #   - Maybe we assign priorities after all jobs have been created allready?
-
+            rJob.deadline = currentTime + task.deadline
 
             jobSet.addJob(aJob)
             jobSet.addJob(rJob)
@@ -164,6 +186,11 @@ class Task_Set:
         self.current = 0
         self.stop = len(self.tasks)
 
+    def getTask(self, taskID):
+        for task in self.tasks:
+            if task.task_id == taskID:
+                return task
+
     # private:
     @staticmethod
     def getHyperPeriod():
@@ -202,18 +229,28 @@ class Job:
         self.deadline = None
         self.priority = None
 
+    def isRestitution(self):
+        return not self.isAcquisition()
+
+    def isAcquisition(self):
+        return self.job_id % 2
 
 class Job_Set:
 
     # Static variables
     jobs = []
-
+    print("Task ID, Job ID, Arrival min, Arrival max, Cost min, Cost max, Deadline, Priority")
     # Print job set as csv
-    #TODO
-    def printJobs():
-        for job in jobs:
-            print("")
-
+    def printJobs(self):
+        for job in self.jobs:
+            print(str(job.task_id) + "," \
+                    + str(job.job_id) + "," \
+                    + str(job.arrival_min) + "," \
+                    + str(job.arrival_max) + "," \
+                    + str(job.cost_min) + "," \
+                    + str(job.cost_max) + "," \
+                    + str(job.deadline) + "," \
+                    + str(job.priority))
 
     @staticmethod
     def addJob(j):
@@ -248,7 +285,7 @@ class Job_Set:
 
 
     def __isRestitution(job_id):
-        return job_id % 2
+        return not job_id % 2
 
 
     def getJob(job_id):
