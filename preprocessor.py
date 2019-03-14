@@ -39,7 +39,7 @@ def main():
     # Priorities must be assigned after all jobs have been created
     assignJobPriorities()
 
-    jobSet.printJobs()
+    jobSet.printJobs(inputArguments.outputFile)
 
     
 def inputParse():
@@ -72,10 +72,11 @@ def assignJobPriorities():
     # No A-phase should have same prio as an R-phase, so add 1 incase a task has a prio of 0
     maxRPrio += 1
 
-    #Assign A-priorities according to their task priority
+    # Assign A-priorities according to their task priority
+    # We assign their priority according to deadline (EDF)
     for job in jobSet.jobs:
         if job.isAcquisition():
-            job.priority = maxRPrio + taskSet.getTask(job.task_id).priority
+            job.priority = maxRPrio + job.deadline
 
 
 # Return the A and R jobs that a single task would produce within a given hyperperiod as a list of lists
@@ -239,18 +240,33 @@ class Job_Set:
 
     # Static variables
     jobs = []
-    print("Task ID, Job ID, Arrival min, Arrival max, Cost min, Cost max, Deadline, Priority")
     # Print job set as csv
-    def printJobs(self):
+    def printJobs(self, out):
+
+        # print("Task ID, Job ID, Arrival min, Arrival max, Cost min, Cost max, Deadline, Priority")
+        # for job in self.jobs:
+            # print(str(job.task_id) + "," \
+                    # + str(job.job_id) + "," \
+                    # + str(job.arrival_min) + "," \
+                    # + str(job.arrival_max) + "," \
+                    # + str(job.cost_min) + "," \
+                    # + str(job.cost_max) + "," \
+                    # + str(job.deadline) + "," \
+                    # + str(job.priority))
+
+        outputFile = open(out, 'w+') if out else sys.stdout
+
+        outputFile.write("Task ID, Job ID, Arrival min, Arrival max, Cost min, Cost max, Deadline, Priority\n")
+
         for job in self.jobs:
-            print(str(job.task_id) + "," \
+            outputFile.write(str(job.task_id) + "," \
                     + str(job.job_id) + "," \
                     + str(job.arrival_min) + "," \
                     + str(job.arrival_max) + "," \
                     + str(job.cost_min) + "," \
                     + str(job.cost_max) + "," \
                     + str(job.deadline) + "," \
-                    + str(job.priority))
+                    + str(job.priority) + "\n")
 
     @staticmethod
     def addJob(j):
