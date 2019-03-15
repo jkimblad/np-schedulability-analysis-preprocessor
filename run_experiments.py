@@ -2,17 +2,18 @@
 
 
 import subprocess
+import random
 
 # Set what ratio of the execution time should be taken by the A-phase and R-phase
-a_ratio = 0.01
-r_ratio = 0.01
+a_ratio = 0.1
+r_ratio = 0.1
 
 # Amount of tasks in each task set
-task_amount = 10
+task_amount = 15
 
 # Total utilization of the task set
 starting_utilization = 0.1
-ending_utilization = 10.0
+ending_utilization = 4.0
 utilization_step_size = 0.1
 
 # Physical cores available in the analysis for jobs to be scheduled onto
@@ -27,7 +28,7 @@ window_ratio = 0.5
 # window_ratio_step_size =  None
 
 # Task sets per window_ratio_step
-iterations = 3
+iterations = 50
 
 # Timeout value for nptest, how long do we allow search for a feasible schedule?
 timeout = 5 
@@ -44,6 +45,8 @@ utilization = starting_utilization
 # Set random seed
 random.seed(2)
 
+print("[")
+
 while utilization < ending_utilization:
 
     for i in range(iterations):
@@ -54,7 +57,7 @@ while utilization < ending_utilization:
                 "-o",                                                               \
                 "tasks/task_set_" + str(iteration_counter) + ".csv",                \
                 "-s",                                                               \
-                str(random.random()),                                               \
+                str(random.randint(1, 1000000)),                                    \
                 "-a",                                                               \
                 str(a_ratio),                                                       \
                 str(r_ratio),                                                       \
@@ -93,17 +96,18 @@ while utilization < ending_utilization:
             'success' : np_result.decode().replace(" ", "").split(",")[1]
             }
         results.append(temp)
-        print("jobset " + str(iteration_counter) + ": " + str(temp))
+        print(str(temp) + ",")
 
 
         iteration_counter += 1
 
         # Delete created files
-        # subprocess.run(["rm -rf task_set.csv job_set.csv"], shell=True)
+        subprocess.run(["rm -rf tasks/* jobs/*"], shell=True)
 
     # Increase utilization for next loop
     utilization += utilization_step_size
 
+print ("]")
 # print (str(results))
 
 

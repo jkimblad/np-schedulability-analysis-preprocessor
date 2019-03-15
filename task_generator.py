@@ -30,7 +30,7 @@ def main():
     # Set the random seed:
     if(inputArguments.seed):
         random.seed(inputArguments.seed)
-        np.random.seed(int(random.random()))
+        np.random.seed(int(random.randint(0, 10000000)))
 
     #Save input arguments
     taskAmountArg = int(inputArguments.taskAmount)
