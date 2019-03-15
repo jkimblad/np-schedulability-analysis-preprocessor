@@ -66,42 +66,18 @@ def calculateAerComputationTimes(periods, utilizations, arFactors):
     aetList = []
     retList = []
 
-    # Used to translate a period into an index for the bcet and wcet lists
-    periodsEnum = {'100' : 0, '200' : 1, '500' : 2, '1000' : 3, '2000' : 4, '5000' : 5, '10000' : 6, '20000' : 7}
-
-    # The following bcet and wcet factors are given by the free real benchmarks for the automotive industry
-    # Best-case execution time as intervals of factors of the average case
-    bcetFactors = [[0.19, 0.92], [0.12, 0.89], [0.17,  0.94], [0.05, 0.99], [0.11, 0.98], [0.32, 0.95], [0.09, 0.99], [0.45,0.98]]
-    # Worst-case execution time as intervals of factors of the average case
-    wcetFactors = [[1.30, 29.11], [1.54, 19.04], [1.13, 18.44], [1.06, 30.03], [1.06, 15.61], [1.13, 7.76], [1.02, 8.88], [1.03, 4.90]]
-
     # Iterate through each period
     for i in range(0, len(periods)):
 
-        bcetMin = bcetFactors[periodsEnum[str(periods[i])]][0] 
-        bcetMax = bcetFactors[periodsEnum[str(periods[i])]][1] 
-
-        # For now, use the optimal BCET within the given interval
-        bcetFactor = bcetMax
-        bcet = int(periods[i] * utilizations[i] * bcetFactor)
-
-        # We do the same for wcet
-        # We calculate A and R times from the bcet
-        wcetMin = wcetFactors[periodsEnum[str(periods[i])]][0] 
-        wcetMax = wcetFactors[periodsEnum[str(periods[i])]][1] 
-
-        # For now, use the optimal WCET within the given interval
-        wcetFactor = wcetMin
-        wcet = int(periods[i] * utilizations[i] * wcetFactor)
-
         # For now, same wcet and bcet, as wcet is only interesting part for us
-        wcet = int(periods[i] * utilizations[i] * wcetFactor)
+        # Since we are only using the WCET, set it to be equal to the generated util
+        wcet = int(periods[i] * utilizations[i])
+        bcet = wcet
 
         # Calculate A and E from BCET to not overshoot the total execution time
         # (if a + e is close to 1 and calculated from the WCET their sum might
         # be larger than the BCET resulting in a negative BCET in later
         # calculations) 
-        
         #Calculate Aqcuisition Execution Time
         aet = int(bcet * float(arFactors[0]))
         # Calculate Restitution Execution Time
@@ -218,7 +194,7 @@ def calculateComputationTimes(periods, utilizations):
     wcet = []
 
     # Used to translate a period into an index for the bcet and wcet lists
-    periodsEnum = {'100' : 0, '200' : 1, '500' : 2, '1000' : 3, '2000' : 4, '5000' : 5, '10000' : 6, '20000' : 7}
+    periodsEnum = {'10000' : 0, '20000' : 1, '50000' : 2, '100000' : 3, '200000' : 4, '500000' : 5, '1000000' : 6, '2000000' : 7}
 
     # The following bcet and wcet factors are given by the free real benchmarks for the automotive industry
     # Best-case execution time as intervals of factors of the average case
@@ -255,7 +231,7 @@ def generatePeriods(taskAmount):
     # adapted (with roundings) due to the fact that we exclude angle-synchronous
     # periods 
     # Periods measured in micro seconds
-    periods = [100, 200, 500, 1000, 2000, 5000, 10000, 20000]
+    periods = [10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000]
     # periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
     # periodDistribution = [0.04, 0.02, 0.02, 0.29, 0.29, 0.04, 0.24, 0.01, 0.05]
     # TOOD: add the 0.05 probability of 1000ms period to others
