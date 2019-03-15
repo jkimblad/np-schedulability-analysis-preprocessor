@@ -3,8 +3,6 @@
 # Import libraries
 # To read CSV input
 import csv
-# For LCM
-from gmpy2 import lcm
 import sys
 import argparse
 # For ceiling function
