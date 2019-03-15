@@ -15,6 +15,10 @@ import argparse
 EXPECTED_ARGUMENTS = 3
 TASK_AMOUNT_ARGUMENT = 1
 UTILIZATION_ARGUMENT = 2
+MILLISECONDS    = 100
+MICROSECONDS    = 100000
+NANOSECONDS     = 100000000
+TIME_RESOLUTION = NANOSECONDS
 
 #Input arguments
 want_aer = False;
@@ -208,23 +212,6 @@ def generateAcquisitionTimes(taskAmount):
     return acquisitionTimes
 
 
-# Not adapted currently. The current way should allow for the user to implement
-# this through custom input, thus it should not be needed
-def generateRestitutionTumes(taskAmount):
-    # Restitution times is represented as nS
-    # These times are acquired from real world examples presented in
-    # "Scheduling Multi-Rate Real-Time Applications on Clustered
-    # Many-Core Architectures with Memory Constraints"
-    restitutionTimes = [25, 195, 28, 55, 55, 28, 55, 83, 55, 83, 28, 25, 28, 390, 240, 0, 28, 195]
-
-    restitutions = []
-
-    for i in range(taskAmount):
-        restitutions.append(restitutionTimes[random.randint(0, len(restitutionTimes) - 1)])
-
-    return restitutions
-
-
 def generatePriorities(taskAmount):
     priorities = list(range(1, taskAmount + 1))
     random.shuffle(priorities)
@@ -261,7 +248,6 @@ def calculateComputationTimes(periods, utilizations):
 
     # Iterate through each period
     for i in range(0, len(periods)):
-        # TODO Randomize bcet from interval using some probability distribution
         # The distribution for bcet should however be flipped (more higher
         # values that are closer to the acet)
 
