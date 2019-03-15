@@ -93,7 +93,7 @@ while utilization < ending_utilization:
         # Save results
         temp = {
             'utilization' : utilization,
-            'success' : np_result.decode().replace(" ", "").split(",")[1]
+            'success' : int(np_result.decode().replace(" ", "").split(",")[1])
             }
         results.append(temp)
         print(str(temp) + ",")
