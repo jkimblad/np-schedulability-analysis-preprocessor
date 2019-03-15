@@ -20,8 +20,6 @@ MICROSECONDS    = 100000
 NANOSECONDS     = 100000000
 TIME_RESOLUTION = NANOSECONDS
 
-#Input arguments
-want_aer = False;
 
 # Main, execution starts here
 def main():
@@ -29,12 +27,14 @@ def main():
     # Parse user arguments/options
     inputArguments = inputParse()
 
+    # Set the random seed:
+    if(inputArguments.seed):
+        random.seed(inputArguments.seed)
+        np.random.seed(int(random.random()))
+
     #Save input arguments
     taskAmountArg = int(inputArguments.taskAmount)
     utilizationArg = float(inputArguments.utilization)
-    #Save if we should generate AER task set
-    if not(inputArguments.arFactors is None):
-        want_aer = True
 
     #Randomise utilizations
     utilizations = uUniFast(taskAmountArg, utilizationArg)
@@ -42,13 +42,8 @@ def main():
     #Randomize periods, assume periods are equal to deadlines
     periods = generatePeriods(taskAmountArg)
     
-    # Generate a regular task set
-    if not(want_aer):
-        #Calculate computation times
-        computationTimes = calculateComputationTimes(periods, utilizations)
     # Generate tasks with A, E and R phases
-    else:
-        computationTimes = calculateAerComputationTimes(periods, utilizations, inputArguments.arFactors)
+    computationTimes = calculateAerComputationTimes(periods, utilizations, inputArguments.arFactors)
 
     #Randomize release times
     releaseTimes = generateReleaseTimes(taskAmountArg)
@@ -111,6 +106,9 @@ def inputParse():
 
     # Create A and R jobs
     parser.add_argument("-a", "--aer", nargs=2, dest="arFactors", help="Input is transformed to A and R jobs to be scheduled onto memory. First argument is the utilization factor of the acquisition phase and the second is the utilization factor of the restitution phase as part of the whole execution time of the task (a+e+r).", metavar="UTIL")
+
+    # Custom seed for rng
+    parser.add_argument("-s", "--seed", dest="seed", help="Number to seed the random number generator such that task-sets can be reproduced")
 
     return parser.parse_args()
 

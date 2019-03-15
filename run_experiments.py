@@ -41,6 +41,9 @@ iteration_counter = 0
 # Start experiments
 utilization = starting_utilization
 
+# Set random seed
+random.seed(2)
+
 while utilization < ending_utilization:
 
     for i in range(iterations):
@@ -50,6 +53,8 @@ while utilization < ending_utilization:
                 "./task_generator.py",                                              \
                 "-o",                                                               \
                 "tasks/task_set_" + str(iteration_counter) + ".csv",                \
+                "-s",                                                               \
+                str(random.random()),                                               \
                 "-a",                                                               \
                 str(a_ratio),                                                       \
                 str(r_ratio),                                                       \
