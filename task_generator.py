@@ -192,27 +192,6 @@ def printTasks(utilizations, periods, computationTimes, releaseTimes, priorities
         writer.writerow(task)
 
 
-# Not adapted currently. The current way should allow for the user to implement
-# this through custom input, thus it should not be needed
-# TODO: Remove
-def generateAcquisitionTimes(taskAmount):
-    # Acquisition times is represented as nS
-    # These times are acquired from real world examples presented in
-    # "Scheduling Multi-Rate Real-Time Applications on Clustered
-    # Many-Core Architectures with Memory Constraints"
-    codeAcquisitionTimes = [11970, 15543, 12070, 13188, 14858, 12140, 15413, 27593, 15413, 27593, 27730, 15058, 14948, 30470, 14948, 30470, 14945, 14858, 12130, 15300]
-    labelAcquisitionTimes = [908, 958, 908, 908, 55, 990, 1013, 990, 1013, 1148, 1060, 988, 965, 933, 908, 28, 985]
-
-    acquisitionTimes = []
-
-    for i in range(taskAmount):
-        codeAcquisitionTime = codeAcquisitionTimes[random.randint(0, len(codeAcquisitionTimes) - 1)]
-        labelAcquisitionTime = labelAcquisitionTimes[random.randint(0, len(labelAcquisitionTimes) - 1)]
-        acquisitionTimes.append(codeAcquisitionTime + labelAcquisitionTime)
-
-    return acquisitionTimes
-
-
 def generatePriorities(taskAmount):
     priorities = list(range(1, taskAmount + 1))
     random.shuffle(priorities)
