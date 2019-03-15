@@ -67,13 +67,13 @@ def calculateAerComputationTimes(periods, utilizations, arFactors):
     retList = []
 
     # Used to translate a period into an index for the bcet and wcet lists
-    periodsEnum = {'100' : 0, '200' : 1, '500' : 2, '1000' : 3, '2000' : 4, '5000' : 5, '10000' : 6, '20000' : 7, '100000' : 8}
+    periodsEnum = {'100' : 0, '200' : 1, '500' : 2, '1000' : 3, '2000' : 4, '5000' : 5, '10000' : 6, '20000' : 7}
 
     # The following bcet and wcet factors are given by the free real benchmarks for the automotive industry
     # Best-case execution time as intervals of factors of the average case
-    bcetFactors = [[0.19, 0.92], [0.12, 0.89], [0.17,  0.94], [0.05, 0.99], [0.11, 0.98], [0.32, 0.95], [0.09, 0.99], [0.45,0.98], [0.68, 0.80]]
+    bcetFactors = [[0.19, 0.92], [0.12, 0.89], [0.17,  0.94], [0.05, 0.99], [0.11, 0.98], [0.32, 0.95], [0.09, 0.99], [0.45,0.98]]
     # Worst-case execution time as intervals of factors of the average case
-    wcetFactors = [[1.30, 29.11], [1.54, 19.04], [1.13, 18.44], [1.06, 30.03], [1.06, 15.61], [1.13, 7.76], [1.02, 8.88], [1.03, 4.90], [1.84, 4.75]]
+    wcetFactors = [[1.30, 29.11], [1.54, 19.04], [1.13, 18.44], [1.06, 30.03], [1.06, 15.61], [1.13, 7.76], [1.02, 8.88], [1.03, 4.90]]
 
     # Iterate through each period
     for i in range(0, len(periods)):
@@ -194,6 +194,7 @@ def printTasks(utilizations, periods, computationTimes, releaseTimes, priorities
 
 # Not adapted currently. The current way should allow for the user to implement
 # this through custom input, thus it should not be needed
+# TODO: Remove
 def generateAcquisitionTimes(taskAmount):
     # Acquisition times is represented as nS
     # These times are acquired from real world examples presented in
@@ -238,19 +239,16 @@ def calculateComputationTimes(periods, utilizations):
     wcet = []
 
     # Used to translate a period into an index for the bcet and wcet lists
-    periodsEnum = {'100' : 0, '200' : 1, '500' : 2, '1000' : 3, '2000' : 4, '5000' : 5, '10000' : 6, '20000' : 7, '100000' : 8}
+    periodsEnum = {'100' : 0, '200' : 1, '500' : 2, '1000' : 3, '2000' : 4, '5000' : 5, '10000' : 6, '20000' : 7}
 
     # The following bcet and wcet factors are given by the free real benchmarks for the automotive industry
     # Best-case execution time as intervals of factors of the average case
-    bcetFactors = [[0.19, 0.92], [0.12, 0.89], [0.17,  0.94], [0.05, 0.99], [0.11, 0.98], [0.32, 0.95], [0.09, 0.99], [0.45,0.98], [0.68, 0.80]]
+    bcetFactors = [[0.19, 0.92], [0.12, 0.89], [0.17,  0.94], [0.05, 0.99], [0.11, 0.98], [0.32, 0.95], [0.09, 0.99], [0.45,0.98]]
     # Worst-case execution time as intervals of factors of the average case
-    wcetFactors = [[1.30, 29.11], [1.54, 19.04], [1.13, 18.44], [1.06, 30.03], [1.06, 15.61], [1.13, 7.76], [1.02, 8.88], [1.03, 4.90], [1.84, 4.75]]
+    wcetFactors = [[1.30, 29.11], [1.54, 19.04], [1.13, 18.44], [1.06, 30.03], [1.06, 15.61], [1.13, 7.76], [1.02, 8.88], [1.03, 4.90]]
 
     # Iterate through each period
     for i in range(0, len(periods)):
-        # The distribution for bcet should however be flipped (more higher
-        # values that are closer to the acet)
-
         bcetMin = bcetFactors[periodsEnum[str(periods[i])]][0] 
         bcetMax = bcetFactors[periodsEnum[str(periods[i])]][1] 
 
@@ -278,9 +276,11 @@ def generatePeriods(taskAmount):
     # adapted (with roundings) due to the fact that we exclude angle-synchronous
     # periods 
     # Periods measured in micro seconds
-    periods = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 100000]
+    periods = [100, 200, 500, 1000, 2000, 5000, 10000, 20000]
     # periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
-    periodDistribution = [0.04, 0.02, 0.02, 0.29, 0.29, 0.04, 0.24, 0.01, 0.05]
+    # periodDistribution = [0.04, 0.02, 0.02, 0.29, 0.29, 0.04, 0.24, 0.01, 0.05]
+    # TOOD: add the 0.05 probability of 1000ms period to others
+    periodDistribution = [0.05, 0.03, 0.03, 0.29, 0.29, 0.05, 0.24, 0.02]
 
     return np.random.choice(periods, taskAmount, p=periodDistribution)
 
