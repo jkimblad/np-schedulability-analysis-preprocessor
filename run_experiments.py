@@ -3,35 +3,41 @@
 
 import subprocess
 import random
+import json
 
-# Set what ratio of the execution time should be taken by the A-phase and R-phase
-a_ratio = 0.1
-r_ratio = 0.1
+settings = {
+        # Set what ratio of the execution time should be taken by the A-phase and R-phase
+        'a_ratio' : 0.1,
+        'r_ratio' : 0.1,
 
-# Amount of tasks in each task set
-task_amount = 15
+        # Amount of tasks in each task set
+        'task_amount' : 15,
 
-# Total utilization of the task set
-starting_utilization = 0.1
-ending_utilization = 4.0
-utilization_step_size = 0.1
+        # Total utilization of the task set
+        'starting_utilization' : 0.1,
+        'ending_utilization' : 4.0,
+        'utilization_step_size' : 0.1,
 
-# Physical cores available in the analysis for jobs to be scheduled onto
-core_amount = 100
+        # Physical cores available in the analysis for jobs to be scheduled onto
+        'core_amount' : 100,
 
-# At what window ratio should we start exploring
-# starting_window_ratio = None
-# ending_window_ratio = None
-window_ratio = 0.5
+        # At what window ratio should we start exploring
+        # starting_window_ratio : None
+        # ending_window_ratio : None
+        'window_ratio' : 0.5,
 
-# How much should we increment the window ratio
-# window_ratio_step_size =  None
+        # How much should we increment the window ratio
+        # window_ratio_step_size :  None
 
-# Task sets per window_ratio_step
-iterations = 50
+        # Task sets per window_ratio_step
+        'iterations' : 1,
 
-# Timeout value for nptest, how long do we allow search for a feasible schedule?
-timeout = 5 
+        # Timeout value for nptest, how long do we allow search for a feasible schedule?
+        'timeout' : 5,
+
+        # Seed for random generator
+        'seed' : 2
+    }
 
 # Results list
 results = []
@@ -40,16 +46,15 @@ results = []
 iteration_counter = 0
 
 # Start experiments
-utilization = starting_utilization
+utilization = settings['starting_utilization']
 
 # Set random seed
-random.seed(2)
+random.seed(settings['seed'])
 
-print("[")
 
-while utilization < ending_utilization:
+while utilization < settings['ending_utilization']:
 
-    for i in range(iterations):
+    for i in range(settings['iterations']):
 
         # Generate task-set
         task_output = subprocess.check_output([                                     \
@@ -59,9 +64,9 @@ while utilization < ending_utilization:
                 "-s",                                                               \
                 str(random.randint(1, 1000000)),                                    \
                 "-a",                                                               \
-                str(a_ratio),                                                       \
-                str(r_ratio),                                                       \
-                str(task_amount),                                                   \
+                str(settings['a_ratio']),                                                       \
+                str(settings['r_ratio']),                                                       \
+                str(settings['task_amount']),                                                   \
                 str(utilization)                                                    \
                 ])
         # print("task: " + task_output.decode())
@@ -72,7 +77,7 @@ while utilization < ending_utilization:
                 "-o",                                                               \
                 "jobs/job_set_" + str(iteration_counter) + ".csv",                  \
                 "-w",                                                               \
-                str(window_ratio),                                                  \
+                str(settings['window_ratio']),                                                  \
                 "tasks/task_set_" + str(iteration_counter) + ".csv"                 \
                 ])
         # print("job: " + job_output.decode())
@@ -81,11 +86,11 @@ while utilization < ending_utilization:
         np_result = subprocess.check_output([                                       \
                 "./nptest",                                                         \
                 "-l",                                                               \
-                str(timeout),                                                       \
+                str(settings['timeout']),                                                       \
                 "-i",                                                               \
                 "AER",                                                              \
                 "-m",                                                               \
-                str(core_amount),                                                   \
+                str(settings['core_amount']),                                                   \
                 "jobs/job_set_" + str(iteration_counter) + ".csv"                   \
                 ])
         # print("np" + np_result.decode())
@@ -96,7 +101,6 @@ while utilization < ending_utilization:
             'success' : int(np_result.decode().replace(" ", "").split(",")[1])
             }
         results.append(temp)
-        print(str(temp) + ",")
 
 
         iteration_counter += 1
@@ -105,10 +109,14 @@ while utilization < ending_utilization:
         subprocess.run(["rm -rf tasks/* jobs/*"], shell=True)
 
     # Increase utilization for next loop
-    utilization += utilization_step_size
+    utilization += settings['utilization_step_size']
 
-print ("]")
-# print (str(results))
+output = {
+        'settings': settings,
+        'results': results
+        }
+
+print(json.dumps(output, indent=4))
 
 
 
