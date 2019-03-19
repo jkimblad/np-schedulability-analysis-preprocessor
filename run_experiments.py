@@ -46,7 +46,6 @@ results = []
 iteration_counter = 0
 
 # Start experiments
-utilization = settings['starting_utilization']
 
 # Set random seed
 random.seed(settings['seed'])
@@ -58,6 +57,8 @@ core_amount = 1
 while core_amount < settings['max_core_amount']:
     schedulable = True
     random.seed(settings['seed'])
+
+    utilization = settings['starting_utilization']
 
     # Keep increasing utilization until we fail to schedule
     while schedulable:
