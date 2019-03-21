@@ -25,45 +25,59 @@ def main():
     # core_plot = plt.plot('x', 'y', data = frame)
 
 
-    plot10 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_10.json'))
-    plot20 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_20.json'))
-    plot30 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_30.json'))
-    plot40 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_40.json'))
-    plot50 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_50.json'))
-    plot60 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_60.json'))
-    plot70 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_70.json'))
-    plot80 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_80.json'))
-    plot90 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_90.json'))
-    plt.legend((plot10[0], plot20[0], plot30[0], plot40[0], plot50[0], plot60[0], plot70[0], plot80[0], plot90[0]), ('10', '20', '30', '40', '50', '60', '70', '80', '90'))
+    axis_data = graph_w_ratio_averages()
+    plot = plt.bar('x', 'y', data = axis_data, width=5)
+    plt.xticks(range(10, 100, 10))
+
+
+
+    for a,b in zip(axis_data['x'], axis_data['y']):
+        plt.text(a, b, str(b))
+
+    plt.ylim(0, 31)
     plt.show()
 
 
-def graph_w_ratio(file_name):
-
-    #load data
-    with open(file_name) as f:
-        data = json.load(f)
-
-    settings = data['settings']
-    results = data['results']
+def graph_w_ratio_averages():
 
     # Create x-axis
-    utilization = settings['starting_utilization']
-    x_data = []
-    while utilization < settings['ending_utilization']:
-        x_data.append(utilization)
-        utilization += settings['utilization_step_size']
-
+    x_data = range(10, 100, 10)
     
     # Create y-axis
-    success_list = []
-    for result in results:
-        success_list.append(result['success'])
+    files = ['results/w_ratio2/w_ratio_10.json', 'results/w_ratio2/w_ratio_20.json', 'results/w_ratio2/w_ratio_30.json', 'results/w_ratio2/w_ratio_40.json', 'results/w_ratio2/w_ratio_50.json', 'results/w_ratio2/w_ratio_60.json', 'results/w_ratio2/w_ratio_70.json', 'results/w_ratio2/w_ratio_80.json', 'results/w_ratio2/w_ratio_90.json']
+
 
     y_data = []
-    for x in range (0, len(results), settings['iterations']):
-        y_data.append(sum(success_list[x:x+settings['iterations']]) * (100 / settings['iterations']))
 
+    for result_file in files:
+
+        #load data
+        with open(result_file) as f:
+            data = json.load(f)
+
+        settings = data['settings']
+        results = data['results']
+
+        success_list = []
+        for result in results:
+            success_list.append(result['success'])
+
+        temp = []
+        for x in range (0, len(results), settings['iterations']):
+            temp.append(sum(success_list[x:x+settings['iterations']]) * (100 / settings['iterations']))
+
+        temp_sum = 0
+        counter = 0
+        for value in temp:
+            temp_sum += value
+            counter +=1
+
+        y_data.append(round(temp_sum / counter, 2))
+
+
+
+    
+    
 
     data_frame = pd.DataFrame({
         'x' : x_data,
@@ -71,8 +85,6 @@ def graph_w_ratio(file_name):
         })
 
     return data_frame
-
-    return plt.plot('x', 'y', data = data_frame)
 
 
 if __name__ == "__main__":
