@@ -7,14 +7,14 @@ import json
 
 settings = {
         # Set what ratio of the execution time should be taken by the A-phase and R-phase
-        'a_ratio' : 0.1,
-        'r_ratio' : 0.1,
+        'a_ratio' : 0.12,
+        'r_ratio' : 0.08,
 
         # Amount of tasks in each task set
         'task_amount' : 15,
 
         # Total utilization of the task set
-        'starting_utilization' : 0.1,
+        'starting_utilization' : 0.0,
         'ending_utilization' : 4.0,
         'utilization_step_size' : 0.1,
 
@@ -22,17 +22,12 @@ settings = {
         'core_amount' : 100,
 
         # At what window ratio should we start exploring
-        # starting_window_ratio : None
-        # ending_window_ratio : None
         'window_ratio_start' : 0.1,
         'window_ratio_end' : 0.9,
         'window_ratio_step_size' : 0.1,
 
-        # How much should we increment the window ratio
-        # window_ratio_step_size :  None
-
         # Task sets per window_ratio_step
-        'iterations' : 1,
+        'iterations' : 1000,
 
         # Timeout value for nptest, how long do we allow search for a feasible schedule?
         'timeout' : 5,
@@ -42,19 +37,20 @@ settings = {
     }
 
 # Results list
-results = []
 
 
 iteration_counter = 0
 
 # Start experiments
-utilization = settings['starting_utilization']
 window_ratio = settings['window_ratio_start']
 
 # Set random seed
-random.seed(settings['seed'])
 
 while window_ratio <= settings['window_ratio_end']: 
+
+    utilization = settings['starting_utilization']
+    random.seed(settings['seed'])
+    results = []
 
     while utilization <= settings['ending_utilization']:
 
@@ -120,7 +116,7 @@ while window_ratio <= settings['window_ratio_end']:
             'results': results
             }
 
-    with open("resuts/window_ratio2/window_ratio_" + round(window_ratio * 100), "w+") as f:
+    with open("results/window_ratio3/w_ratio_" + str(round(window_ratio * 100)) + ".json", "w+") as f:
         f.write(json.dumps(output, indent=4))
 
     window_ratio += settings['window_ratio_step_size']
