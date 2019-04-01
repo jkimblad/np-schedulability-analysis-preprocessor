@@ -18,13 +18,14 @@ settings = {
         'utilization_step_size' : 0.01,
 
         # Physical cores available in the analysis for jobs to be scheduled onto
-        'core_amount' : 1,
-	'max_core_amount' : 30,
+        'core_step' : 1,
+        'start_core' : 1,
+	'stop_core' : 255,
 
         # At what window ratio should we start exploring
         # starting_window_ratio : None
         # ending_window_ratio : None
-        'window_ratio' : 0.5,
+        'window_ratio' : 0.6,
 
         # How much should we increment the window ratio
         # window_ratio_step_size :  None
@@ -33,38 +34,30 @@ settings = {
         'iterations' : 50,
 
         # Timeout value for nptest, how long do we allow search for a feasible schedule?
-        'timeout' : 5,
+        # 0 for no timeout
+        'timeout' : 0,
 
         # Seed for random generator
         'seed' : 2
     }
 
-# Results list
-results = []
-
 
 iteration_counter = 0
-
 # Start experiments
+core_amount = settings['start_core']
 
 # Set random seed
-random.seed(settings['seed'])
 
-schedulable = True
-core_amount = 1
-
-
-while core_amount < settings['max_core_amount']:
-    schedulable = True
-    random.seed(settings['seed'])
+while core_amount <= settings['stop_core']: 
 
     utilization = settings['starting_utilization']
+    random.seed(settings['seed'])
+    results = []
 
-    # Keep increasing utilization until we fail to schedule
-    while schedulable:
-        schedulable = False
+    while utilization <= settings['ending_utilization']:
+
         for i in range(settings['iterations']):
-    
+
             # Generate task-set
             task_output = subprocess.check_output([                                     \
                     "./task_generator.py",                                              \
@@ -79,18 +72,18 @@ while core_amount < settings['max_core_amount']:
                     str(utilization)                                                    \
                     ])
             # print("task: " + task_output.decode())
-    
+
             # Generate job-set from task-set
             job_output = subprocess.check_output([                                      \
                     "./preprocessor.py",                                                \
                     "-o",                                                               \
                     "jobs/job_set_" + str(iteration_counter) + ".csv",                  \
                     "-w",                                                               \
-                    str(settings['window_ratio']),                                                  \
+                    str(window_ratio),                                                  \
                     "tasks/task_set_" + str(iteration_counter) + ".csv"                 \
                     ])
             # print("job: " + job_output.decode())
-    
+
             # Run nptest
             np_result = subprocess.check_output([                                       \
                     "./nptest",                                                         \
@@ -99,42 +92,35 @@ while core_amount < settings['max_core_amount']:
                     "-i",                                                               \
                     "AER",                                                              \
                     "-m",                                                               \
-                    str(core_amount),                                                   \
+                    str(settings['core_amount']),                                                   \
                     "jobs/job_set_" + str(iteration_counter) + ".csv"                   \
                     ])
             # print("np" + np_result.decode())
-    
-	    # Check if any was schedualble under the current utilization
+
             # Save results
             temp = {
                 'utilization' : utilization,
                 'success' : int(np_result.decode().replace(" ", "").split(",")[1])
                 }
-    	
-            if temp['success'] is 1:
-    	        schedulable = True
-    
-    
+            results.append(temp)
+
+
             iteration_counter += 1
-    
+
             # Delete created files
             subprocess.run(["rm -rf tasks/* jobs/*"], shell=True)
 
         # Increase utilization for next loop
         utilization += settings['utilization_step_size']
 
-    print("cores: " + str(core_amount))
-    print("highest U: " + str(utilization - settings['utilization_step_size']))
+    output = {
+            'settings': settings,
+            'results': results
+            }
 
-    #increase core amount
-    core_amount += 1
+    with open("results/core_amount1/core_amount_" + str(core_amount) + ".json", "w+") as f:
+        f.write(json.dumps(output, indent=4))
 
-output = {
-        'settings': settings,
-        'results': results
-        }
-
-print(json.dumps(output, indent=4))
-
+    core_amout += settings['core_step']
 
 
