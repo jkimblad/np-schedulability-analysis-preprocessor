@@ -25,16 +25,11 @@ def main():
     # core_plot = plt.plot('x', 'y', data = frame)
 
 
-    plot10 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_10.json'))
-    plot20 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_20.json'))
-    plot30 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_30.json'))
-    plot40 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_40.json'))
-    plot50 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_50.json'))
-    plot60 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_60.json'))
-    plot70 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_70.json'))
-    plot80 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_80.json'))
-    plot90 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio2/w_ratio_90.json'))
-    plt.legend((plot10[0], plot20[0], plot30[0], plot40[0], plot50[0], plot60[0], plot70[0], plot80[0], plot90[0]), ('10', '20', '30', '40', '50', '60', '70', '80', '90'))
+    plot10 = plt.plot('x', 'y', data = graph_w_ratio('results/task_amount_4.json'))
+    # plt.legend((plot10[0], plot20[0], plot30[0], plot40[0], plot50[0], plot60[0], plot70[0], plot80[0], plot90[0]), ('10', '20', '30', '40', '50', '60', '70', '80', '90'))
+    plt.ylabel("schedulable task sets (%)")
+    plt.xlabel("Tasks")
+    plt.ylim(ymin=0)
     plt.show()
 
 
@@ -48,11 +43,11 @@ def graph_w_ratio(file_name):
     results = data['results']
 
     # Create x-axis
-    utilization = settings['starting_utilization']
+    tasks = settings['starting_tasks']
     x_data = []
-    while utilization < settings['ending_utilization']:
-        x_data.append(utilization)
-        utilization += settings['utilization_step_size']
+    while tasks <= settings['ending_tasks']:
+        x_data.append(tasks)
+        tasks += settings['tasks_step']
 
     
     # Create y-axis
