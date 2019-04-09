@@ -4,6 +4,7 @@
 import subprocess
 import random
 import json
+import sys
 
 settings = {
         # Set what ratio of the execution time should be taken by the A-phase and R-phase
@@ -11,16 +12,17 @@ settings = {
         'r_ratio' : 0.1,
 
         # Amount of tasks in each task set
-        'task_amount' : 15,
+        'task_amount' : 10,
 
         # Total utilization of the task set
         'starting_utilization' : 0.1,
-        'utilization_step_size' : 0.01,
+        'ending_utilization' : 4.0,
+        'utilization_step_size' : 0.1,
 
         # Physical cores available in the analysis for jobs to be scheduled onto
         'core_step' : 1,
         'start_core' : 1,
-	'stop_core' : 255,
+	'stop_core' : 10,
 
         # At what window ratio should we start exploring
         # starting_window_ratio : None
@@ -31,7 +33,7 @@ settings = {
         # window_ratio_step_size :  None
 
         # Task sets per window_ratio_step
-        'iterations' : 50,
+	'iterations' : 100,
 
         # Timeout value for nptest, how long do we allow search for a feasible schedule?
         # 0 for no timeout
@@ -42,6 +44,12 @@ settings = {
     }
 
 
+def progbar(curr, total, full_progbar):
+    frac = curr/total
+    filled_progbar = round(frac*full_progbar)
+    print('\r', '#'*filled_progbar + '-'*(full_progbar-filled_progbar), '[{:>7.2%}]'.format(frac), end='')
+ 
+
 iteration_counter = 0
 # Start experiments
 core_amount = settings['start_core']
@@ -49,6 +57,9 @@ core_amount = settings['start_core']
 # Set random seed
 
 while core_amount <= settings['stop_core']: 
+
+    progbar(core_amount, settings['stop_core'], 50)
+    sys.stdout.flush()
 
     utilization = settings['starting_utilization']
     random.seed(settings['seed'])
@@ -79,7 +90,7 @@ while core_amount <= settings['stop_core']:
                     "-o",                                                               \
                     "jobs/job_set_" + str(iteration_counter) + ".csv",                  \
                     "-w",                                                               \
-                    str(window_ratio),                                                  \
+                    str(settings['window_ratio']),                                                  \
                     "tasks/task_set_" + str(iteration_counter) + ".csv"                 \
                     ])
             # print("job: " + job_output.decode())
@@ -92,7 +103,7 @@ while core_amount <= settings['stop_core']:
                     "-i",                                                               \
                     "AER",                                                              \
                     "-m",                                                               \
-                    str(settings['core_amount']),                                                   \
+                    str(core_amount),                                                   \
                     "jobs/job_set_" + str(iteration_counter) + ".csv"                   \
                     ])
             # print("np" + np_result.decode())
@@ -118,9 +129,10 @@ while core_amount <= settings['stop_core']:
             'results': results
             }
 
-    with open("results/core_amount1/core_amount_" + str(core_amount) + ".json", "w+") as f:
+    with open("results/core_amount3/core_amount_" + str(core_amount) + ".json", "w+") as f:
         f.write(json.dumps(output, indent=4))
 
-    core_amout += settings['core_step']
+    core_amount += settings['core_step']
+
 
 
