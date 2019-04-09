@@ -23,6 +23,7 @@ def main():
     # Get user options
     inputArguments = inputParse()
 
+    scheduler = inputArguments.scheduler
     windowSize = inputArguments.windowSize
 
     # Load tasks from input into taskSet
@@ -35,7 +36,7 @@ def main():
     generateJobs(windowSize)
 
     # Priorities must be assigned after all jobs have been created
-    assignJobPriorities()
+    assignJobPriorities(scheduler)
 
     jobSet.printJobs(inputArguments.outputFile)
 
@@ -52,10 +53,15 @@ def inputParse():
     # How large the A and R windows should be in proportion to each other
     parser.add_argument("-w", "--window", dest="windowSize", help="Determines the ratio between the sizes of A and R windows which within each respective phase can be scheduled as part of the interval from job release to job deadline", metavar="SIZE", type=float, default=0.5)
 
+    # Scheduling algorithm used
+    parser.add_argument("-s", "--scheduler", dest="scheduler", help="What scheduling algorithm to be used", choices=['EDF', 'HU', 'LU', 'LULP', 'LUHP', 'HULP', 'HUHP'])
+
     return parser.parse_args()
 
 
-def assignJobPriorities():
+def assignJobPriorities(scheduler):
+
+    print("scheduler : " + scheduler)
     taskSet = Task_Set()
     jobSet = Job_Set()
 
@@ -72,38 +78,44 @@ def assignJobPriorities():
     maxRPrio += 1
 
     # low util is high prio
-    # lowUtilPriorities(maxRPrio, jobSet, taskSet)
+    if(scheduler == 'LU'):
+        lowUtilPriorities(maxRPrio, jobSet, taskSet)
 
     # high util is high prio
-    highUtilPriorities(maxRPrio, jobSet, taskSet)
+    elif(scheduler == 'HU'):
+        highUtilPriorities(maxRPrio, jobSet, taskSet)
+
+    # Task-level:
+        # Lowest utility highest prio
+    # Period-level:
+        # Lowest period highest prio
+    elif(scheduler == 'LULP'):
+        lowUtilLowPeriodPriorities(maxRPrio, jobSet, taskSet)
+
+    # Task-level:
+        # Lowest utility highest prio
+    # Period-level:
+        # Highest period highest prio
+    elif(scheduler == 'LUHP'):
+        lowUtilHighPeriodPriorities(maxRPrio, jobSet, taskSet)
+
+    # Task-level:
+        # Highest utility higest prio
+    # Period-level:
+        # Lowest period highest prio
+    elif(scheduler == 'HULP'):
+        highUtilLowPeriodPriorities(maxRPrio, jobSet, taskSet)
+
+    # Task-level:
+        # Highest utility higest prio
+    # Period-level:
+        # Highest period highest prio
+    elif(scheduler == 'HUHP'):
+        highUtilHighPeriodPriorities(maxRPrio, jobSet, taskSet)
 
     #EDF Priorities
-    # edfPriorities(jobSet, maxRPrio)
-
-    # Task-level:
-        # Lowest utility highest prio
-    # Period-level:
-        # Lowest period highest prio
-    # lowUtilLowPeriodPriorities(maxRPrio, jobSet, taskSet)
-
-    # Task-level:
-        # Lowest utility highest prio
-    # Period-level:
-        # Highest period highest prio
-    # lowUtilHighPeriodPriorities(maxRPrio, jobSet, taskSet)
-
-    # Task-level:
-        # Highest utility higest prio
-    # Period-level:
-        # Lowest period highest prio
-    # highUtilLowPeriodPriorities(maxRPrio, jobSet, taskSet)
-
-    # Task-level:
-        # Highest utility higest prio
-    # Period-level:
-        # Highest period highest prio
-    # highUtilHighPeriodPriorities(maxRPrio, jobSet, taskSet)
-
+    else(scheduler == 'EDF'):
+        edfPriorities(jobSet, maxRPrio)
 
 # Lowest utilization overall has highest prio (ignore periods)
 def lowUtilPriorities(startPrio, jobSet, taskSet):
