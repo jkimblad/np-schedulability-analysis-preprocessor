@@ -11,15 +11,15 @@ settings = {
         'r_ratio' : 0.1,
 
         # Amount of tasks in each task set
-        'task_amount' : 15,
+        'task_amount' : 50,
 
         # Total utilization of the task set
         'starting_utilization' : 0.1,
-        'ending_utilization' : 4.0,
+        'ending_utilization' : 1.0,
         'utilization_step_size' : 0.1,
 
         # Physical cores available in the analysis for jobs to be scheduled onto
-        'core_amount' : 100,
+        'core_amount' : 50,
 
         # At what window ratio should we start exploring
         # starting_window_ratio : None
@@ -116,7 +116,8 @@ output = {
         'results': results
         }
 
-print(json.dumps(output, indent=4))
+with open("results/algos/lowUtil_1.json", "w+") as f:
+    f.write(json.dumps(output, indent=4))
 
 
 
