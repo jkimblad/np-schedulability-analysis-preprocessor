@@ -114,7 +114,7 @@ def assignJobPriorities(scheduler):
         highUtilHighPeriodPriorities(maxRPrio, jobSet, taskSet)
 
     #EDF Priorities
-    else(scheduler == 'EDF'):
+    else:
         edfPriorities(jobSet, maxRPrio)
 
 # Lowest utilization overall has highest prio (ignore periods)
