@@ -121,7 +121,7 @@ def printTasks(utilizations, periods, computationTimes, releaseTimes, priorities
 
     # A and R phases
     else:
-        fieldNames = ["id", "arrival_min", "arrival_max", "computation_min", "computation_max", "acquisition", "restitution", "deadline", "priority", "period"]
+        fieldNames = ["id", "utilization", "arrival_min", "arrival_max", "computation_min", "computation_max", "acquisition", "restitution", "deadline", "priority", "period"]
 
     # Open output file is given, else print to stdout
     outputFile = open(inputArguments.outputFile, 'w+') if inputArguments.outputFile else sys.stdout
@@ -133,6 +133,9 @@ def printTasks(utilizations, periods, computationTimes, releaseTimes, priorities
 
         #id
         task.append(i + 1)
+
+        #utilization
+        task.append(utilizations[i])
 
         #release
         task.append(releaseTimes['bcrt'][i])

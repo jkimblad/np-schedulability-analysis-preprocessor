@@ -67,14 +67,206 @@ def assignJobPriorities():
             job.priority = job.deadline
             maxRPrio = max(maxRPrio, job.priority)
 
+
     # No A-phase should have same prio as an R-phase, so add 1 incase a task has a prio of 0
     maxRPrio += 1
 
+    # low util is high prio
+    # lowUtilPriorities(maxRPrio, jobSet, taskSet)
+
+    # high util is high prio
+    highUtilPriorities(maxRPrio, jobSet, taskSet)
+
+    #EDF Priorities
+    # edfPriorities(jobSet, maxRPrio)
+
+    # Task-level:
+        # Lowest utility highest prio
+    # Period-level:
+        # Lowest period highest prio
+    # lowUtilLowPeriodPriorities(maxRPrio, jobSet, taskSet)
+
+    # Task-level:
+        # Lowest utility highest prio
+    # Period-level:
+        # Highest period highest prio
+    # lowUtilHighPeriodPriorities(maxRPrio, jobSet, taskSet)
+
+    # Task-level:
+        # Highest utility higest prio
+    # Period-level:
+        # Lowest period highest prio
+    # highUtilLowPeriodPriorities(maxRPrio, jobSet, taskSet)
+
+    # Task-level:
+        # Highest utility higest prio
+    # Period-level:
+        # Highest period highest prio
+    # highUtilHighPeriodPriorities(maxRPrio, jobSet, taskSet)
+
+
+# Lowest utilization overall has highest prio (ignore periods)
+def lowUtilPriorities(startPrio, jobSet, taskSet):
+    
+    jobList = []
+    priority = startPrio
+    
+    # Save all A-jobs
+    for job in jobSet.jobs:
+        if job.isAcquisition():
+            jobList.append(job)
+
+    jobList.sort(key=lambda x: x.utilization)
+    for job in jobList:
+        job.priority = priority
+        priority += 1
+
+
+# Highest utilization overall has highest prio (ignore periods)
+def highUtilPriorities(startPrio, jobSet, taskSet):
+    
+    jobList = []
+    priority = startPrio
+    
+    # Save all A-jobs
+    for job in jobSet.jobs:
+        if job.isAcquisition():
+            jobList.append(job)
+
+    jobList.sort(key=lambda x: x.utilization, reverse=True)
+    for job in jobList:
+        job.priority = priority
+        priority += 1
+
+
+#EDF
+def edfPriorities(jobSet, maxRPrio):
     # Assign A-priorities according to their task priority
     # We assign their priority according to deadline (EDF)
     for job in jobSet.jobs:
         if job.isAcquisition():
             job.priority = maxRPrio + job.deadline
+
+
+# Task-level:
+    # Lowest utility highest prio
+# Period-level:
+    # Lowest period highest prio
+def lowUtilLowPeriodPriorities(startPrio, jobSet, taskSet):
+
+    periods = [10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000]
+    jobList = []
+    priority = startPrio
+
+    # Iterate periods from low to high
+    for period in periods:
+        # Iterate jobs of the period
+        for job in  jobSet.jobs:
+            if job.period == period:
+                if job.isAcquisition():
+                    # Jobs is acquisition and has desired period
+                    jobList.append(job)
+                    
+        # Now we have all A jobs of a given period in jobList
+        # Order list of relevant jobs according to utilization in increasing order
+        jobList.sort(key=lambda x: x.utilization)
+        for job in jobList:
+            job.priority = priority
+            priority += 1
+
+
+        #Reset list
+        jobList = []
+
+
+# Task-level:
+    # Lowest utility highest prio
+# Period-level:
+    # Highest period highest prio
+def lowUtilHighPeriodPriorities(startPrio, jobSet, taskSet):
+
+    periods = [10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000]
+    jobList = []
+    priority = startPrio
+
+    # Iterate periods from high to low
+    for period in reversed(periods):
+        # Iterate jobs of the period
+        for job in  jobSet.jobs:
+            if job.period == period:
+                if job.isAcquisition():
+                    # Jobs is acquisition and has desired period
+                    jobList.append(job)
+                    
+        # Now we have all A jobs of a given period in jobList
+        # Order list of relevant jobs according to utilization in increasing order
+        jobList.sort(key=lambda x: x.utilization)
+        for job in jobList:
+            job.priority = priority
+            priority += 1
+
+        #Reset list
+        jobList = []
+
+
+# Task-level:
+    # Highest utility higest prio
+# Period-level:
+    # Lowest period highest prio
+def highUtilLowPeriodPriorities(startPrio, jobSet, taskSet):
+
+    periods = [10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000]
+    jobList = []
+    priority = startPrio
+
+    # Iterate periods from low to high
+    for period in periods:
+        # Iterate jobs of the period
+        for job in  jobSet.jobs:
+            if job.period == period:
+                if job.isAcquisition():
+                    # Jobs is acquisition and has desired period
+                    jobList.append(job)
+                    
+        # Now we have all A jobs of a given period in jobList
+        # Order list of relevant jobs according to utilization in decreasing order
+        jobList.sort(key=lambda x: x.utilization, reverse=True)
+        for job in jobList:
+            job.priority = priority
+            priority += 1
+
+        #Reset list
+        jobList = []
+
+
+# Task-level:
+    # Highest utility higest prio
+# Period-level:
+    # Highest period highest prio
+def highUtilHighPeriodPriorities(startPrio, jobSet, taskSet):
+
+    periods = [10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000]
+    jobList = []
+    priority = startPrio
+
+    # Iterate periods from high to low
+    for period in reversed(periods):
+        # Iterate jobs of the period
+        for job in  jobSet.jobs:
+            if job.period == period:
+                if job.isAcquisition():
+                    # Jobs is acquisition and has desired period
+                    jobList.append(job)
+                    
+        # Now we have all A jobs of a given period in jobList
+        # Order list of relevant jobs according to utilization in decreasing order
+        jobList.sort(key=lambda x: x.utilization, reverse=True)
+        for job in jobList:
+            job.priority = priority
+            priority += 1
+
+        #Reset list
+        jobList = []
 
 
 # Return the A and R jobs that a single task would produce within a given hyperperiod as a list of lists
@@ -99,17 +291,18 @@ def generateJobs(windowRatio):
 
             # Create the job ID pair as there are some constraints on how they should be created
             idPair = jobSet.getNextIDPair()
-            
 
             # Create the A job
             aJob = Job()
             aJob.task_id = task.task_id
             aJob.job_id = idPair[0] 
+            aJob.utilization = task.utilization
             #Arrival for A is same as arrival for task
             aJob.arrival_min = currentTime + task.arrival_min
             aJob.arrival_max = currentTime + task.arrival_max
             aJob.cost_min = task.acquisition
             aJob.cost_max = task.acquisition
+            aJob.period = task.period
 
             # The deadline of the A job is given by the window ratio given as input
             absoluteADeadline = ceil(windowRatio * windowSize)
@@ -149,6 +342,7 @@ def getTasks(inputFile):
             task = Task()
             #Transform input in each row from string to int
             task.task_id = int(row['id'])
+            task.utilization = float(row['utilization'])
             task.arrival_min = int(row['arrival_min'])
             task.arrival_max = int(row['arrival_max'])
             task.computation_min = int(row['computation_min'])
@@ -165,6 +359,7 @@ class Task:
     
     def __init__(self):
         self.task_id = None
+        self.utilization = None
         self.arrival_min = None
         self.arrival_max = None
         self.computation_min = None
@@ -221,12 +416,14 @@ class Job:
     def __init__(self):
         self.task_id = None
         self.job_id = None
+        self.utilization = None
         self.arrival_min = None
         self.arrival_max = None
         self.cost_min = None
         self.cost_max = None
         self.deadline = None
         self.priority = None
+        self.period = None
 
     def isRestitution(self):
         return not self.isAcquisition()
@@ -240,17 +437,6 @@ class Job_Set:
     jobs = []
     # Print job set as csv
     def printJobs(self, out):
-
-        # print("Task ID, Job ID, Arrival min, Arrival max, Cost min, Cost max, Deadline, Priority")
-        # for job in self.jobs:
-            # print(str(job.task_id) + "," \
-                    # + str(job.job_id) + "," \
-                    # + str(job.arrival_min) + "," \
-                    # + str(job.arrival_max) + "," \
-                    # + str(job.cost_min) + "," \
-                    # + str(job.cost_max) + "," \
-                    # + str(job.deadline) + "," \
-                    # + str(job.priority))
 
         outputFile = open(out, 'w+') if out else sys.stdout
 
