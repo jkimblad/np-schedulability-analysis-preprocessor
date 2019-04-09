@@ -40,9 +40,20 @@ settings = {
     }
 
 
+def progbar(curr, total, full_progbar):
+    frac = curr/total
+    filled_progbar = round(frac*full_progbar)
+    print('\r', '#'*filled_progbar + '-'*(full_progbar-filled_progbar), '[{:>7.2%}]'.format(frac), end='')
+
+
 schedulers = ['EDF', 'HU', 'LU', 'LULP', 'LUHP', 'HULP', 'HUHP']
 
+counter = 0
 for scheduler in schedulers:
+   
+    progbar(counter, len(schedulers), 100)
+
+    counter += 1
 
 
     # Results list
@@ -124,7 +135,7 @@ for scheduler in schedulers:
             'results': results
             }
 
-    with open("results/algos/" + scheduler + "_1.json", "w+") as f:
+    with open("results/algos_2/" + scheduler + "_1.json", "w+") as f:
         f.write(json.dumps(output, indent=4))
 
 
