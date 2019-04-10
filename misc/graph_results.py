@@ -12,13 +12,13 @@ import pandas as pd
 
 def main():
 
-    edf = plt.plot('x', 'y', data = graph_w_ratio('results/algos_1/edf.json'))
-    highUtil = plt.plot('x', 'y', data = graph_w_ratio('results/algos_1/highUtil.json'))
-    lowUtil = plt.plot('x', 'y', data = graph_w_ratio('results/algos_1/lowUtil.json'))
-    lowUtilLowPeriod = plt.plot('x', 'y', data = graph_w_ratio('results/algos_1/lowUtilLowPeriod.json'))
-    lowUtilHighPeriod = plt.plot('x', 'y', data = graph_w_ratio('results/algos_1/lowUtilHighPeriod.json'))
-    highUtilLowPeriod = plt.plot('x', 'y', data = graph_w_ratio('results/algos_1/highUtilLowPeriod.json'))
-    highUtilHighPeriod = plt.plot('x', 'y', data = graph_w_ratio('results/algos_1/highUtilHighPeriod.json'))
+    edf                 = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/EDF_1.json'))
+    highUtil            = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/HU_1.json'))
+    lowUtil             = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/LU_1.json'))
+    lowUtilLowPeriod    = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/LULP_1.json'))
+    lowUtilHighPeriod   = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/LUHP_1.json'))
+    highUtilLowPeriod   = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/HULP_1.json'))
+    highUtilHighPeriod  = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/HUHP_1.json'))
     plt.legend((edf[0], highUtil[0], lowUtil[0], lowUtilLowPeriod[0], lowUtilHighPeriod[0], highUtilLowPeriod[0], highUtilHighPeriod[0]), ('EDF', 'HU', 'LU', 'LULP', 'LUHP', 'HULP', 'HUHP'))
     plt.show()
 
