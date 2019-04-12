@@ -61,67 +61,70 @@ def inputParse():
 
 def assignJobPriorities(scheduler):
 
-    print("scheduler : " + scheduler)
     taskSet = Task_Set()
     jobSet = Job_Set()
 
-    maxRPrio = 0
-
-    #Assign R-priorities according to EDF
-    for job in jobSet.jobs:
-        if job.isRestitution():
-            job.priority = job.deadline
-            maxRPrio = max(maxRPrio, job.priority)
-
-
-    # No A-phase should have same prio as an R-phase, so add 1 incase a task has a prio of 0
-    maxRPrio += 1
 
     # low util is high prio
     if(scheduler == 'LU'):
-        lowUtilPriorities(maxRPrio, jobSet, taskSet)
+        lowUtilPriorities(jobSet, taskSet)
 
     # high util is high prio
     elif(scheduler == 'HU'):
-        highUtilPriorities(maxRPrio, jobSet, taskSet)
+        highUtilPriorities(jobSet, taskSet)
 
     # Task-level:
         # Lowest utility highest prio
     # Period-level:
         # Lowest period highest prio
     elif(scheduler == 'LULP'):
-        lowUtilLowPeriodPriorities(maxRPrio, jobSet, taskSet)
+        lowUtilLowPeriodPriorities(jobSet, taskSet)
 
     # Task-level:
         # Lowest utility highest prio
     # Period-level:
         # Highest period highest prio
     elif(scheduler == 'LUHP'):
-        lowUtilHighPeriodPriorities(maxRPrio, jobSet, taskSet)
+        lowUtilHighPeriodPriorities(jobSet, taskSet)
 
     # Task-level:
         # Highest utility higest prio
     # Period-level:
         # Lowest period highest prio
     elif(scheduler == 'HULP'):
-        highUtilLowPeriodPriorities(maxRPrio, jobSet, taskSet)
+        highUtilLowPeriodPriorities(jobSet, taskSet)
 
     # Task-level:
         # Highest utility higest prio
     # Period-level:
         # Highest period highest prio
     elif(scheduler == 'HUHP'):
-        highUtilHighPeriodPriorities(maxRPrio, jobSet, taskSet)
+        highUtilHighPeriodPriorities(jobSet, taskSet)
 
     #EDF Priorities
     else:
-        edfPriorities(jobSet, maxRPrio)
+        edfPriorities(jobSet)
 
 # Lowest utilization overall has highest prio (ignore periods)
-def lowUtilPriorities(startPrio, jobSet, taskSet):
-    
+def lowUtilPriorities(jobSet, taskSet):
+
+    # Assign prios for R-jobs
     jobList = []
-    priority = startPrio
+    priority = 1
+
+    # Save all R-jobs
+    for job in jobSet.jobs:
+        if job.isRestitution():
+            jobList.append(job)
+
+    jobList.sort(key=lambda x: x.utilization)
+    for job in jobList:
+        job.priority = priority
+        priority += 1
+
+
+    # Assign prios for A-jobs
+    jobList = []
     
     # Save all A-jobs
     for job in jobSet.jobs:
@@ -135,10 +138,25 @@ def lowUtilPriorities(startPrio, jobSet, taskSet):
 
 
 # Highest utilization overall has highest prio (ignore periods)
-def highUtilPriorities(startPrio, jobSet, taskSet):
+def highUtilPriorities(jobSet, taskSet):
     
+    # Assign prios for R-jobs
     jobList = []
-    priority = startPrio
+    priority = 1
+
+    # Save all R-jobs
+    for job in jobSet.jobs:
+        if job.isRestitution():
+            jobList.append(job)
+
+    jobList.sort(key=lambda x: x.utilization, reverse=True)
+    for job in jobList:
+        job.priority = priority
+        priority += 1
+
+
+    # Assign prios for A-jobs
+    jobList = []
     
     # Save all A-jobs
     for job in jobSet.jobs:
@@ -152,7 +170,19 @@ def highUtilPriorities(startPrio, jobSet, taskSet):
 
 
 #EDF
-def edfPriorities(jobSet, maxRPrio):
+def edfPriorities(jobSet):
+    maxRPrio = 0
+
+    #Assign R-priorities according to EDF
+    for job in jobSet.jobs:
+        if job.isRestitution():
+            job.priority = job.deadline
+            maxRPrio = max(maxRPrio, job.priority)
+
+
+    # No A-phase should have same prio as an R-phase, so add 1 incase a task has a prio of 0
+    maxRPrio += 1
+
     # Assign A-priorities according to their task priority
     # We assign their priority according to deadline (EDF)
     for job in jobSet.jobs:
@@ -164,11 +194,38 @@ def edfPriorities(jobSet, maxRPrio):
     # Lowest utility highest prio
 # Period-level:
     # Lowest period highest prio
-def lowUtilLowPeriodPriorities(startPrio, jobSet, taskSet):
+def lowUtilLowPeriodPriorities(jobSet, taskSet):
 
     periods = [10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000]
+
+
+    # Assign R-job prios
+    priority = 1
     jobList = []
-    priority = startPrio
+
+    # Iterate periods from low to high
+    for period in periods:
+        # Iterate jobs of the period
+        for job in  jobSet.jobs:
+            if job.period == period:
+                if job.isRestitution():
+                    # Jobs is restitution and has desired period
+                    jobList.append(job)
+                    
+        # Now we have all R jobs of a given period in jobList
+        # Order list of relevant jobs according to utilization in increasing order
+        jobList.sort(key=lambda x: x.utilization)
+        for job in jobList:
+            job.priority = priority
+            priority += 1
+
+
+        #Reset list
+        jobList = []
+
+
+    # Assign A-job prios
+    jobList = []
 
     # Iterate periods from low to high
     for period in periods:
@@ -195,11 +252,37 @@ def lowUtilLowPeriodPriorities(startPrio, jobSet, taskSet):
     # Lowest utility highest prio
 # Period-level:
     # Highest period highest prio
-def lowUtilHighPeriodPriorities(startPrio, jobSet, taskSet):
+def lowUtilHighPeriodPriorities(jobSet, taskSet):
 
     periods = [10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000]
+
+    # Assign R-job prios
+    priority = 1
     jobList = []
-    priority = startPrio
+
+    # Iterate periods from low to high
+    for period in reversed(periods):
+        # Iterate jobs of the period
+        for job in  jobSet.jobs:
+            if job.period == period:
+                if job.isRestitution():
+                    # Jobs is restitution and has desired period
+                    jobList.append(job)
+                    
+        # Now we have all R jobs of a given period in jobList
+        # Order list of relevant jobs according to utilization in increasing order
+        jobList.sort(key=lambda x: x.utilization)
+        for job in jobList:
+            job.priority = priority
+            priority += 1
+
+
+        #Reset list
+        jobList = []
+
+
+    # Assign A-job prios
+    jobList = []
 
     # Iterate periods from high to low
     for period in reversed(periods):
@@ -225,11 +308,37 @@ def lowUtilHighPeriodPriorities(startPrio, jobSet, taskSet):
     # Highest utility higest prio
 # Period-level:
     # Lowest period highest prio
-def highUtilLowPeriodPriorities(startPrio, jobSet, taskSet):
+def highUtilLowPeriodPriorities(jobSet, taskSet):
 
     periods = [10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000]
+
+    # Assign R-job prios
+    priority = 1
     jobList = []
-    priority = startPrio
+
+    # Iterate periods from low to high
+    for period in reversed(periods):
+        # Iterate jobs of the period
+        for job in  jobSet.jobs:
+            if job.period == period:
+                if job.isRestitution():
+                    # Jobs is restitution and has desired period
+                    jobList.append(job)
+                    
+        # Now we have all R jobs of a given period in jobList
+        # Order list of relevant jobs according to utilization in increasing order
+        jobList.sort(key=lambda x: x.utilization, reverse = True)
+        for job in jobList:
+            job.priority = priority
+            priority += 1
+
+
+        #Reset list
+        jobList = []
+
+
+    # Assign A-job prios
+    jobList = []
 
     # Iterate periods from low to high
     for period in periods:
@@ -255,11 +364,37 @@ def highUtilLowPeriodPriorities(startPrio, jobSet, taskSet):
     # Highest utility higest prio
 # Period-level:
     # Highest period highest prio
-def highUtilHighPeriodPriorities(startPrio, jobSet, taskSet):
+def highUtilHighPeriodPriorities(jobSet, taskSet):
 
     periods = [10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000]
+
+    # Assign R-job prios
+    priority = 1
     jobList = []
-    priority = startPrio
+
+    # Iterate periods from low to high
+    for period in reversed(periods):
+        # Iterate jobs of the period
+        for job in  jobSet.jobs:
+            if job.period == period:
+                if job.isRestitution():
+                    # Jobs is restitution and has desired period
+                    jobList.append(job)
+                    
+        # Now we have all R jobs of a given period in jobList
+        # Order list of relevant jobs according to utilization in increasing order
+        jobList.sort(key=lambda x: x.utilization, reverse=True)
+        for job in jobList:
+            job.priority = priority
+            priority += 1
+
+
+        #Reset list
+        jobList = []
+
+
+    # Assign A-job prios
+    jobList = []
 
     # Iterate periods from high to low
     for period in reversed(periods):
@@ -325,6 +460,7 @@ def generateJobs(windowRatio):
             rJob = Job()
             rJob.task_id = task.task_id
             rJob.job_id = idPair[1] 
+            rJob.utilization = task.utilization
             #Arrival for R is A-window + WCET 
             #Assume deterministic arrival
             #If the split between A and R window isnt an integer the extra cycle is given to the R window.
@@ -332,6 +468,7 @@ def generateJobs(windowRatio):
             rJob.arrival_max = rJob.arrival_min
             rJob.cost_min = task.restitution
             rJob.cost_max = task.restitution
+            rJob.period = task.period
 
             # The deadline of the A job is given by the window ratio given as input
             rJob.deadline = currentTime + task.deadline
