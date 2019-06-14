@@ -15,16 +15,7 @@ import pandas as pd
 
 def main():
 
-    # x_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-    # y_data = [0, 0, 0, 0, 0.15, 0.35, 2.05, 2.2, 2.35, 2.4, 2.4, 2.4, 2.4, 2.4]
-
-    # frame = pd.DataFrame({
-        # 'x' : x_data,
-        # 'y' : y_data
-        # })
-    # core_plot = plt.plot('x', 'y', data = frame)
-
-
+    f = plt.figure()
     axis_data = graph_w_ratio_averages()
     plot = plt.bar('x', 'y', data = axis_data, width=5)
     plt.xticks(range(10, 100, 10))
@@ -32,17 +23,21 @@ def main():
 
 
     for a,b in zip(axis_data['x'], axis_data['y']):
-        plt.text(a, b, str(b))
+        plt.text(x = a - 4, y = b + 0.005, s = str(b))
 
-    plt.ylim(0, 31)
+    plt.xlabel("Window ratio(%)")
+    plt.ylabel("Average schedulability ratio")
+    plt.ylim(0, 0.3)
     plt.show()
+
+    f.savefig("window_ratio.pdf", bbox_inches='tight')
 
 
 def graph_w_ratio_averages():
 
     # Create x-axis
     x_data = range(10, 100, 10)
-    
+
     # Create y-axis
     files = ['results/w_ratio2/w_ratio_10.json', 'results/w_ratio2/w_ratio_20.json', 'results/w_ratio2/w_ratio_30.json', 'results/w_ratio2/w_ratio_40.json', 'results/w_ratio2/w_ratio_50.json', 'results/w_ratio2/w_ratio_60.json', 'results/w_ratio2/w_ratio_70.json', 'results/w_ratio2/w_ratio_80.json', 'results/w_ratio2/w_ratio_90.json']
 
@@ -64,7 +59,7 @@ def graph_w_ratio_averages():
 
         temp = []
         for x in range (0, len(results), settings['iterations']):
-            temp.append(sum(success_list[x:x+settings['iterations']]) * (100 / settings['iterations']))
+            temp.append(sum(success_list[x:x+settings['iterations']]) / settings['iterations'])
 
         temp_sum = 0
         counter = 0
@@ -72,12 +67,9 @@ def graph_w_ratio_averages():
             temp_sum += value
             counter +=1
 
-        y_data.append(round(temp_sum / counter, 2))
+        y_data.append(round(temp_sum / counter, 3))
 
 
-
-    
-    
 
     data_frame = pd.DataFrame({
         'x' : x_data,
