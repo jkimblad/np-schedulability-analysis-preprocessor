@@ -36,11 +36,11 @@ def main():
     plot70 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio3/w_ratio_70.json'))
     plot80 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio3/w_ratio_80.json'))
     plot90 = plt.plot('x', 'y', data = graph_w_ratio('results/w_ratio3/w_ratio_90.json'))
-    plt.legend((plot10[0], plot20[0], plot30[0], plot40[0], plot50[0], plot60[0], plot70[0], plot80[0], plot90[0]), ('10', '20', '30', '40', '50', '60', '70', '80', '90'))
+    plt.legend((plot10[0], plot20[0], plot30[0], plot40[0], plot50[0], plot60[0], plot70[0], plot80[0], plot90[0]), ('10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%'))
+    plt.xlabel("Utilization")
+    plt.ylabel("Schedulability ratio")
     plt.show()
 
-    plt.xlabel("Utilization")
-    plt.ylabel("Average schedulability ratio")
 
     f.savefig("w_ratio3.pdf", bbox_inches='tight')
 
@@ -68,7 +68,7 @@ def graph_w_ratio(file_name):
 
     y_data = []
     for x in range (0, len(results), settings['iterations']):
-        y_data.append(sum(success_list[x:x+settings['iterations']]) * (100 / settings['iterations']))
+        y_data.append(sum(success_list[x:x+settings['iterations']]) / settings['iterations'])
 
 
     data_frame = pd.DataFrame({
