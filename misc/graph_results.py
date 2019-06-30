@@ -12,55 +12,76 @@ import pandas as pd
 
 def main():
 
-    edf                 = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/EDF_1.json'))
-    highUtil            = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/HU_1.json'))
-    lowUtil             = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/LU_1.json'))
-    lowUtilLowPeriod    = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/LULP_1.json'))
-    lowUtilHighPeriod   = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/LUHP_1.json'))
-    highUtilLowPeriod   = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/HULP_1.json'))
-    highUtilHighPeriod  = plt.plot('x', 'y', data = graph_w_ratio('results/algos_2/HUHP_1.json'))
-    plt.legend((edf[0], highUtil[0], lowUtil[0], lowUtilLowPeriod[0], lowUtilHighPeriod[0], highUtilLowPeriod[0], highUtilHighPeriod[0]), ('EDF', 'HU', 'LU', 'LULP', 'LUHP', 'HULP', 'HUHP'))
+    f = plt.figure()
+
+    axis_data = graph_algo_averages()
+    plot = plt.bar('x', 'y', data = axis_data, width=0.5)
+
+    for a,b in zip(axis_data['x'], axis_data['y']):
+        plt.text(x = a, y = b + 0.005, s = str(b), ha='center')
+
+
+    plt.xlabel("Scheduling algorithm")
+    plt.ylabel("Average schedulability ratio")
+    plt.ylim(0, 0.3)
     plt.show()
 
+    f.savefig("scheduling_alog_averages.pdf", bbox_inches='tight')
 
-def graph_w_ratio(file_name):
 
-    #load data
-    with open(file_name) as f:
-        data = json.load(f)
-
-    settings = data['settings']
-    results = data['results']
+def graph_algo_averages():
 
     # Create x-axis
-    utilization = settings['starting_utilization']
-    x_data = []
-    while utilization < settings['ending_utilization']:
-        x_data.append(utilization)
-        utilization += settings['utilization_step_size']
+    x_data = ["EDF", "HU", "LU", "LULP", "LUHP", "HULP", "HUHP"]
 
-    
-    # Create y-axis
-    success_list = []
-    for result in results:
-        success_list.append(result['success'])
+
+    #Create y-axis
+    folder = "algos_8"
+    files = [                               \
+        'results/' + folder + '/EDF_1.json', \
+        'results/' + folder + '/HU_1.json', \
+        'results/' + folder + '/LU_1.json', \
+        'results/' + folder + '/LULP_1.json', \
+        'results/' + folder + '/LUHP_1.json', \
+        'results/' + folder + '/HULP_1.json', \
+        'results/' + folder + '/HUHP_1.json' \
+             ]
 
     y_data = []
-    for x in range (0, len(results), settings['iterations']):
-        y_data.append(sum(success_list[x:x+settings['iterations']]) * (100 / settings['iterations']))
 
+    for result_file in files:
 
-    print(len(x_data))
-    print(len(y_data))
+        #load data
+        with open(result_file) as f:
+            data = json.load(f)
+
+        settings = data['settings']
+        results = data['results']
+
+        success_list = []
+        for result in results:
+            success_list.append(result['success'])
+
+        temp = []
+        for x in range (0, len(results), settings['iterations']):
+            temp.append(sum(success_list[x:x+settings['iterations']]) / settings['iterations'])
+
+        temp_sum = 0
+        counter = 0
+
+        for value in temp:
+            temp_sum += value
+            counter += 1
+
+        y_data.append(round(temp_sum / counter, 3))
+
 
     data_frame = pd.DataFrame({
         'x' : x_data,
         'y' : y_data
-        })
+    })
 
     return data_frame
-
-    return plt.plot('x', 'y', data = data_frame)
 
 
 if __name__ == "__main__":
