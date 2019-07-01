@@ -24,6 +24,7 @@ def main():
         # })
     # core_plot = plt.plot('x', 'y', data = frame)
 
+    f = plt.figure()
 
     plot1 = plt.plot('x', 'y', data = graph_w_ratio('results/core_amount3/core_amount_1.json'))
     plot2 = plt.plot('x', 'y', data = graph_w_ratio('results/core_amount3/core_amount_2.json'))
@@ -35,8 +36,13 @@ def main():
     plot8 = plt.plot('x', 'y', data = graph_w_ratio('results/core_amount3/core_amount_8.json'))
     plot9 = plt.plot('x', 'y', data = graph_w_ratio('results/core_amount3/core_amount_9.json'))
     plot10 = plt.plot('x', 'y', data = graph_w_ratio('results/core_amount3/core_amount_10.json'))
-    plt.legend((plot1[0], plot2[0], plot3[0], plot4[0], plot5[0], plot6[0], plot7[0], plot8[0], plot9[0], plot10[0]), ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10'))
+    plt.legend((plot1[0], plot2[0], plot3[0], plot4[0], plot5[0], plot6[0], plot7[0], plot8[0], plot9[0], plot10[0]), ('1 core', '2 cores', '3 cores', '4 cores', '5 cores', '6 cores', '7 cores', '8 cores', '9 cores', '10 cores'))
+
+    plt.xlabel("Utilization")
+    plt.ylabel("Schedulability ratio")
     plt.show()
+
+    f.savefig("core_amounts.pdf", bbox_inches='tight')
 
 
 def graph_w_ratio(file_name):
@@ -55,7 +61,6 @@ def graph_w_ratio(file_name):
         x_data.append(utilization)
         utilization += settings['utilization_step_size']
 
-    
     # Create y-axis
     success_list = []
     for result in results:
@@ -63,7 +68,7 @@ def graph_w_ratio(file_name):
 
     y_data = []
     for x in range (0, len(results), settings['iterations']):
-        y_data.append(sum(success_list[x:x+settings['iterations']]) * (100 / settings['iterations']))
+        y_data.append(sum(success_list[x:x+settings['iterations']]) / settings['iterations'])
 
 
     data_frame = pd.DataFrame({
